@@ -16,9 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(
         properties = {
-                "io.github.luidmidev.springframework.errors.all-errors=true",
-                "io.github.luidmidev.springframework.errors.log-errors=true",
-                "io.github.luidmidev.springframework.errors.send-stack-trace=true"
+                "spring.web.problemdetails.all-errors=true",
+                "spring.web.problemdetails.log-errors=true",
+                "spring.web.problemdetails.send-stack-trace=true"
         }
 )
 @AutoConfigureMockMvc

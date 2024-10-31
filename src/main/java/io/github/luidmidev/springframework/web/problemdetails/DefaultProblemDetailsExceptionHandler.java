@@ -14,6 +14,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.SpringSecurityMessageSource;
 import org.springframework.web.ErrorResponse;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -30,6 +31,7 @@ import static org.springframework.http.HttpStatus.*;
  * Default Exception Handler
  */
 @Log4j2
+@ControllerAdvice
 public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler implements ProblemDetailsPropertiesAware {
 
     private boolean allErrors;
