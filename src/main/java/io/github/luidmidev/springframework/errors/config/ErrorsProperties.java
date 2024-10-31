@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
  * @see ErrorsPropertiesAware
  */
 @Data
-@Configuration
 @ConfigurationProperties(prefix = "io.github.luidmidev.springframework.errors")
 public class ErrorsProperties {
     private boolean allErrors = false;
