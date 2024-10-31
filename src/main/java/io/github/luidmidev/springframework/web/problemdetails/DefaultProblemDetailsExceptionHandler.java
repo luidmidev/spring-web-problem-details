@@ -1,9 +1,9 @@
-package io.github.luidmidev.springframework.errors;
+package io.github.luidmidev.springframework.web.problemdetails;
 
-import io.github.luidmidev.springframework.errors.config.ErrorsProperties;
-import io.github.luidmidev.springframework.errors.config.ErrorsPropertiesAware;
-import io.github.luidmidev.springframework.errors.schemas.FieldErrorPair;
-import io.github.luidmidev.springframework.errors.schemas.ValidationError;
+import io.github.luidmidev.springframework.web.problemdetails.config.ProblemDetailsProperties;
+import io.github.luidmidev.springframework.web.problemdetails.config.ProblemDetailsPropertiesAware;
+import io.github.luidmidev.springframework.web.problemdetails.schemas.FieldMessage;
+import io.github.luidmidev.springframework.web.problemdetails.schemas.ValidationErrorCollector;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
@@ -30,22 +30,46 @@ import static org.springframework.http.HttpStatus.*;
  * Default Exception Handler
  */
 @Log4j2
-public abstract class DefaultExceptionHandler extends ResponseEntityExceptionHandler implements ErrorsPropertiesAware {
+public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler implements ProblemDetailsPropertiesAware {
 
     private boolean allErrors;
     private boolean logErrors;
     private boolean sendStackTrace;
 
     /**
-     * Processor method for the {@link ErrorsProperties} configuration.
+     * Processor method for the {@link ProblemDetailsProperties} configuration.
      * @param properties the configuration object.
      */
     @Override
-    public void setErrorsConfiguration(ErrorsProperties properties) {
+    public void setErrorsConfiguration(ProblemDetailsProperties properties) {
         log.info("Setting error properties: {}", properties);
         this.allErrors = properties.isAllErrors();
         this.logErrors = properties.isLogErrors();
         this.sendStackTrace = properties.isSendStackTrace();
+    }
+
+    /**
+     * Check if the {@link ProblemDetailsProperties} allErrors value
+     * @return value
+     */
+    protected boolean isAllErrors() {
+        return allErrors;
+    }
+
+    /**
+     * Check if the {@link ProblemDetailsProperties} logErrors value
+     * @return value
+     */
+    protected boolean isLogErrors() {
+        return logErrors;
+    }
+
+    /**
+     * Check if the {@link ProblemDetailsProperties} sendStackTrace value
+     * @return value
+     */
+    protected boolean isSendStackTrace() {
+        return sendStackTrace;
     }
 
     /**
@@ -61,7 +85,7 @@ public abstract class DefaultExceptionHandler extends ResponseEntityExceptionHan
 
     /**
      * Handler for generic exceptions, it returns a ProblemDetail with the exception message if
-     * {@link ErrorsProperties} allErrors is true, otherwise it returns a generic message.
+     * {@link ProblemDetailsProperties} allErrors is true, otherwise it returns a generic message.
      * @param ex the exception
      * @param request the web request
      * @return response entity with the problem detail.
@@ -74,12 +98,12 @@ public abstract class DefaultExceptionHandler extends ResponseEntityExceptionHan
     }
 
     /**
-     * Handler for {@link ApiErrorException} exceptions.
+     * Handler for {@link ProblemDetailsException} exceptions.
      * @param ex the exception
      * @return response entity with the problem detail.
      */
-    @ExceptionHandler(ApiErrorException.class)
-    public ResponseEntity<ProblemDetail> handleApiErrorException(ApiErrorException ex) {
+    @ExceptionHandler(ProblemDetailsException.class)
+    public ResponseEntity<ProblemDetail> handleApiErrorException(ProblemDetailsException ex) {
         var problem = ex.getBody();
         return ResponseEntity.status(problem.getStatus()).headers(ex.getHeaders()).body(problem);
     }
@@ -98,10 +122,10 @@ public abstract class DefaultExceptionHandler extends ResponseEntityExceptionHan
         addValidationErrors(body, ex.getConstraintViolations(), violation -> {
             var path = violation.getPropertyPath().toString().split("\\.");
             log.debug("Property path: {}, Class bean {}", violation.getPropertyPath(), violation.getRootBeanClass());
-            return new FieldErrorPair(path[path.length - 1], violation.getMessage());
+            return new FieldMessage(path[path.length - 1], violation.getMessage());
         });
 
-        return createResponseEntity(body, new HttpHeaders(), BAD_REQUEST, request);
+        return createResponseEntity(ex, new HttpHeaders(), BAD_REQUEST, request, body);
     }
 
     /**
@@ -120,9 +144,89 @@ public abstract class DefaultExceptionHandler extends ResponseEntityExceptionHan
         var defaultDetail = ex.getMessage();
         var body = ProblemDetail.forStatusAndDetail(UNAUTHORIZED, defaultDetail);
         updateDefaultTittleAndType(ex, body);
-        dispatchEvents(ex, body);
-        return createResponseEntity(body, new HttpHeaders(), UNAUTHORIZED, request);
+        return createResponseEntity(ex, new HttpHeaders(), UNAUTHORIZED, request, body);
     }
+
+
+    /**
+     * Creates a new {@link ProblemDetail} object with the given parameters.
+     * @param ex the exception
+     * @param headers the headers
+     * @param statusCode the status code
+     * @param defaultDetail the default detail message, if the message code is not found
+     * @param detailMessageCode the detail message code to use, if not exists the default detail message is used
+     * @param detailMessageArguments the detail message arguments use to interpolate the message
+     * @param request the web request
+     * @return a new {@link ProblemDetail} object
+     */
+    protected ResponseEntity<Object> createDefaultResponseEntity(Exception ex, HttpHeaders headers, HttpStatusCode statusCode, String defaultDetail, @Nullable String detailMessageCode, Object[] detailMessageArguments, WebRequest request) {
+        var body = super.createProblemDetail(ex, statusCode, defaultDetail, detailMessageCode, detailMessageArguments, request);
+        return createResponseEntity(ex, headers, statusCode, request, body);
+    }
+
+
+    /**
+     * Gnerate and add validation errors to the @{@link ProblemDetail} object.
+     * @param body the problem detail object
+     * @param errors the collection of errors
+     * @param mapper the function to map the error to a {@link FieldMessage}
+     * @param <T> the type of the error
+     */
+    protected static <T> void addValidationErrors(ProblemDetail body, Collection<T> errors, Function<T, FieldMessage> mapper) {
+        var validations = new ValidationErrorCollector();
+        for (var error : errors) {
+            var fieldError = mapper.apply(error);
+            if (fieldError.field() != null) validations.addError(fieldError.field(), fieldError.message());
+            else validations.addGlobalError(fieldError.message());
+        }
+
+        var errorsMap = validations.getErrors();
+        var globalErrors = validations.getGlobalErrors();
+
+        if (!errorsMap.isEmpty()) body.setProperty("errors", errorsMap);
+        if (!globalErrors.isEmpty()) body.setProperty("globalErrors", globalErrors);
+    }
+
+    /**
+     * Update the default title and type of the {@link ProblemDetail} object.
+     * @param ex the exception
+     * @param body the problem detail object
+     */
+    protected void updateDefaultTittleAndType(Exception ex, ProblemDetail body) {
+        var messageSource = getMessageSource();
+        var clazz = ex.getClass();
+        if (messageSource != null) {
+            var locale = LocaleContextHolder.getLocale();
+            body.setTitle(messageSource.getMessage(ErrorResponse.getDefaultTitleMessageCode(clazz), null, null, locale));
+            var type = messageSource.getMessage(ErrorResponse.getDefaultTypeMessageCode(clazz), null, null, locale);
+            if (type != null) body.setType(URI.create(type));
+        }
+    }
+
+    /**
+     * Create a new {@link ResponseEntity} object with the given parameters and dispatch events.
+     * @param ex the exception to handle
+     * @param headers the headers
+     * @param statusCode the status code
+     * @param request the current request
+     * @param body the body to use for the response
+     * @return a {@code ResponseEntity} for the response to use
+     */
+    private ResponseEntity<Object> createResponseEntity(Exception ex, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request, ProblemDetail body) {
+        dispatchEvents(ex, body);
+        return createResponseEntity(body, headers, statusCode, request);
+    }
+
+    /**
+     * Dispatch events after handling an exception.
+     * @param ex the exception
+     * @param body the body
+     */
+    private void dispatchEvents(Exception ex, Object body) {
+        if (logErrors) log.error("Error: {}", ex.getMessage(), ex);
+        if (sendStackTrace && body instanceof ProblemDetail problemDetail) problemDetail.setProperty("stackTrace", getStackTrace(ex));
+    }
+
 
     /**
      * Internal override handler method that all others in this class delegate to, for
@@ -152,72 +256,6 @@ public abstract class DefaultExceptionHandler extends ResponseEntityExceptionHan
         return response;
     }
 
-
-    /**
-     * Creates a new {@link ProblemDetail} object with the given parameters.
-     * @param ex the exception
-     * @param headers the headers
-     * @param statusCode the status code
-     * @param defaultDetail the default detail message
-     * @param detailMessageCode the detail message code
-     * @param detailMessageArguments the detail message arguments
-     * @param request the web request
-     * @return a new {@link ProblemDetail} object
-     */
-    protected ResponseEntity<Object> createDefaultResponseEntity(Exception ex, HttpHeaders headers, HttpStatusCode statusCode, String defaultDetail, @Nullable String detailMessageCode, Object[] detailMessageArguments, WebRequest request) {
-        var body = super.createProblemDetail(ex, statusCode, defaultDetail, detailMessageCode, detailMessageArguments, request);
-        dispatchEvents(ex, body);
-        return createResponseEntity(body, headers, statusCode, request);
-    }
-
-    /**
-     * Gnerate and add validation errors to the @{@link ProblemDetail} object.
-     * @param body the problem detail object
-     * @param errors the collection of errors
-     * @param mapper the function to map the error to a {@link FieldErrorPair}
-     * @param <T> the type of the error
-     */
-    protected static <T> void addValidationErrors(ProblemDetail body, Collection<T> errors, Function<T, FieldErrorPair> mapper) {
-        var validations = new ValidationError();
-        for (var error : errors) {
-            var fieldError = mapper.apply(error);
-            if (fieldError.field() != null) validations.addError(fieldError.field(), fieldError.message());
-            else validations.addGlobalError(fieldError.message());
-        }
-
-        var errorsMap = validations.getErrors();
-        var globalErrors = validations.getGlobalErrors();
-
-        if (!errorsMap.isEmpty()) body.setProperty("errors", errorsMap);
-        if (!globalErrors.isEmpty()) body.setProperty("globalErrors", globalErrors);
-    }
-
-    /**
-     * Dispatch events after handling an exception.
-     * @param ex the exception
-     * @param body the body
-     */
-    private void dispatchEvents(Exception ex, Object body) {
-        if (logErrors) log.error("Error: {}", ex.getMessage(), ex);
-        if (sendStackTrace && body instanceof ProblemDetail problemDetail) problemDetail.setProperty("stackTrace", getStackTrace(ex));
-    }
-
-
-    /**
-     * Update the default title and type of the {@link ProblemDetail} object.
-     * @param ex the exception
-     * @param body the problem detail object
-     */
-    protected void updateDefaultTittleAndType(Exception ex, ProblemDetail body) {
-        var messageSource = getMessageSource();
-        var clazz = ex.getClass();
-        if (messageSource != null) {
-            var locale = LocaleContextHolder.getLocale();
-            body.setTitle(messageSource.getMessage(ErrorResponse.getDefaultTitleMessageCode(clazz), null, null, locale));
-            var type = messageSource.getMessage(ErrorResponse.getDefaultTypeMessageCode(clazz), null, null, locale);
-            if (type != null) body.setType(URI.create(type));
-        }
-    }
 
     /**
      * Get the stack trace of an exception as a string.

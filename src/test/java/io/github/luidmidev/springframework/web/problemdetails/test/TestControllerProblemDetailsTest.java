@@ -1,4 +1,4 @@
-package io.github.luidmidev.springframework.errors.test;
+package io.github.luidmidev.springframework.web.problemdetails.test;
 
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 )
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class TestControllerTest {
+class TestControllerProblemDetailsTest {
 
 
     @Autowired

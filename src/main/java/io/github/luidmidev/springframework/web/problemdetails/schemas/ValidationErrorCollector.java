@@ -1,4 +1,4 @@
-package io.github.luidmidev.springframework.errors.schemas;
+package io.github.luidmidev.springframework.web.problemdetails.schemas;
 
 import lombok.Data;
 
@@ -9,7 +9,7 @@ import java.util.List;
  * Model used to represent validation errors.
  */
 @Data
-public class ValidationError {
+public class ValidationErrorCollector {
 
     private final List<Error> errors = new ArrayList<>();
     private final List<String> globalErrors = new ArrayList<>();

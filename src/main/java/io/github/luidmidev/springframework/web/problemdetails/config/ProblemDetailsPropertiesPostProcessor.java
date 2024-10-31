@@ -1,4 +1,4 @@
-package io.github.luidmidev.springframework.errors.config;
+package io.github.luidmidev.springframework.web.problemdetails.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -7,13 +7,13 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 
 
 /**
- * Bean post processor to inject the {@link ErrorsProperties} configuration into beans that implement {@link ErrorsPropertiesAware}.
+ * Bean post processor to inject the {@link ProblemDetailsProperties} configuration into beans that implement {@link ProblemDetailsPropertiesAware}.
  */
 @Log4j2
 @RequiredArgsConstructor
-public class ErrorBeanPostProcessor implements BeanPostProcessor {
+public class ProblemDetailsPropertiesPostProcessor implements BeanPostProcessor {
 
-    private final ErrorsProperties properties;
+    private final ProblemDetailsProperties properties;
 
     /**
      * Process the bean before initialization.
@@ -24,8 +24,8 @@ public class ErrorBeanPostProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessAfterInitialization(@NotNull Object bean, @NotNull String beanName) {
 
-        if (bean instanceof ErrorsPropertiesAware aware) {
-            log.info("Setting errors configuration for bean {}", beanName);
+        if (bean instanceof ProblemDetailsPropertiesAware aware) {
+            log.debug("Setting errors configuration for bean {}", beanName);
             aware.setErrorsConfiguration(properties);
         }
 

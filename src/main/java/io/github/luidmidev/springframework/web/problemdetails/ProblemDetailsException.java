@@ -1,4 +1,4 @@
-package io.github.luidmidev.springframework.errors;
+package io.github.luidmidev.springframework.web.problemdetails;
 
 import lombok.Getter;
 import org.springframework.http.HttpHeaders;
@@ -6,11 +6,11 @@ import org.springframework.http.ProblemDetail;
 
 /**
  * Exception to be thrown when an API based on the Problem Details specification, this
- * exception will be caught by the {@link DefaultExceptionHandler} and the response will be
+ * exception will be caught by the {@link DefaultProblemDetailsExceptionHandler} and the response will be
  * built based on the {@link ProblemDetail} object.
  */
 @Getter
-public class ApiErrorException extends RuntimeException {
+public class ProblemDetailsException extends RuntimeException {
 
 
     /**
@@ -27,7 +27,7 @@ public class ApiErrorException extends RuntimeException {
      * Create a new instance of the exception with the given {@link ProblemDetail} object.
      * @param body the problem detail object to be used as the response body.
      */
-    public ApiErrorException(ProblemDetail body) {
+    public ProblemDetailsException(ProblemDetail body) {
         this(body, new HttpHeaders());
     }
 
@@ -36,7 +36,7 @@ public class ApiErrorException extends RuntimeException {
      * @param body the problem detail object to be used as the response body.
      * @param headers the headers to be used in the response.
      */
-    public ApiErrorException(ProblemDetail body, HttpHeaders headers) {
+    public ProblemDetailsException(ProblemDetail body, HttpHeaders headers) {
         this.body = body;
         this.headers = headers;
     }
@@ -47,7 +47,7 @@ public class ApiErrorException extends RuntimeException {
      * @param value the field value.
      * @return the exception instance.
      */
-    public ApiErrorException extension(String field, String value) {
+    public ProblemDetailsException extension(String field, String value) {
         body.setProperty(field, value);
         return this;
     }
