@@ -40,6 +40,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Processor method for the {@link ProblemDetailsProperties} configuration.
+     *
      * @param properties the configuration object.
      */
     @Override
@@ -52,6 +53,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Check if the {@link ProblemDetailsProperties} allErrors value
+     *
      * @return value
      */
     protected boolean isAllErrors() {
@@ -60,6 +62,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Check if the {@link ProblemDetailsProperties} logErrors value
+     *
      * @return value
      */
     protected boolean isLogErrors() {
@@ -68,6 +71,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Check if the {@link ProblemDetailsProperties} sendStackTrace value
+     *
      * @return value
      */
     protected boolean isSendStackTrace() {
@@ -76,6 +80,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Set the MessageSource that this object will use for resolving messages.
+     *
      * @param messageSource message source to be used by this object
      */
     @Override
@@ -88,7 +93,8 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
     /**
      * Handler for generic exceptions, it returns a ProblemDetail with the exception message if
      * {@link ProblemDetailsProperties} allErrors is true, otherwise it returns a generic message.
-     * @param ex the exception
+     *
+     * @param ex      the exception
      * @param request the web request
      * @return response entity with the problem detail.
      */
@@ -101,6 +107,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Handler for {@link ProblemDetailsException} exceptions.
+     *
      * @param ex the exception
      * @return response entity with the problem detail.
      */
@@ -112,7 +119,8 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Handler for {@link ConstraintViolationException} exceptions.
-     * @param ex the exception
+     *
+     * @param ex      the exception
      * @param request the web request
      * @return response entity with the problem detail.
      */
@@ -135,10 +143,9 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      * internationalizing the authentication error message. This message is used only for the 'detail' of the ProblemDetail,
      * while the title and type are obtained from the MessageSource of this artifact.
      *
-     * @param ex AuthenticationException
+     * @param ex      AuthenticationException
      * @param request WebRequest
      * @return response entity with the problem detail.
-     *
      * @see SpringSecurityMessageSource#getAccessor()
      */
     @ExceptionHandler(AuthenticationException.class)
@@ -152,13 +159,14 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Creates a new {@link ProblemDetail} object with the given parameters.
-     * @param ex the exception
-     * @param headers the headers
-     * @param statusCode the status code
-     * @param defaultDetail the default detail message, if the message code is not found
-     * @param detailMessageCode the detail message code to use, if not exists the default detail message is used
+     *
+     * @param ex                     the exception
+     * @param headers                the headers
+     * @param statusCode             the status code
+     * @param defaultDetail          the default detail message, if the message code is not found
+     * @param detailMessageCode      the detail message code to use, if not exists the default detail message is used
      * @param detailMessageArguments the detail message arguments use to interpolate the message
-     * @param request the web request
+     * @param request                the web request
      * @return a new {@link ProblemDetail} object
      */
     protected ResponseEntity<Object> createDefaultResponseEntity(Exception ex, HttpHeaders headers, HttpStatusCode statusCode, String defaultDetail, @Nullable String detailMessageCode, Object[] detailMessageArguments, WebRequest request) {
@@ -169,10 +177,11 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     /**
      * Gnerate and add validation errors to the @{@link ProblemDetail} object.
-     * @param body the problem detail object
+     *
+     * @param body   the problem detail object
      * @param errors the collection of errors
      * @param mapper the function to map the error to a {@link FieldMessage}
-     * @param <T> the type of the error
+     * @param <T>    the type of the error
      */
     protected static <T> void addValidationErrors(ProblemDetail body, Collection<T> errors, Function<T, FieldMessage> mapper) {
         var validations = new ValidationErrorCollector();
@@ -189,45 +198,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         if (!globalErrors.isEmpty()) body.setProperty("globalErrors", globalErrors);
     }
 
-    /**
-     * Update the default title and type of the {@link ProblemDetail} object.
-     * @param ex the exception
-     * @param body the problem detail object
-     */
-    protected void updateDefaultTittleAndType(Exception ex, ProblemDetail body) {
-        var messageSource = getMessageSource();
-        var clazz = ex.getClass();
-        if (messageSource != null) {
-            var locale = LocaleContextHolder.getLocale();
-            body.setTitle(messageSource.getMessage(ErrorResponse.getDefaultTitleMessageCode(clazz), null, null, locale));
-            var type = messageSource.getMessage(ErrorResponse.getDefaultTypeMessageCode(clazz), null, null, locale);
-            if (type != null) body.setType(URI.create(type));
-        }
-    }
 
-    /**
-     * Create a new {@link ResponseEntity} object with the given parameters and dispatch events.
-     * @param ex the exception to handle
-     * @param headers the headers
-     * @param statusCode the status code
-     * @param request the current request
-     * @param body the body to use for the response
-     * @return a {@code ResponseEntity} for the response to use
-     */
-    private ResponseEntity<Object> createResponseEntity(Exception ex, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request, ProblemDetail body) {
-        dispatchEvents(ex, body);
-        return createResponseEntity(body, headers, statusCode, request);
-    }
-
-    /**
-     * Dispatch events after handling an exception.
-     * @param ex the exception
-     * @param body the body
-     */
-    private void dispatchEvents(Exception ex, Object body) {
-        if (logErrors) log.error("Error: {}", ex.getMessage(), ex);
-        if (sendStackTrace && body instanceof ProblemDetail problemDetail) problemDetail.setProperty("stackTrace", getStackTrace(ex));
-    }
 
 
     /**
@@ -243,11 +214,12 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      * <li>extract the {@link ErrorResponse#getBody() body} from
      * {@link ErrorResponse} exceptions, if the {@code body} is {@code null}.
      * </ul>
-     * @param ex the exception to handle
-     * @param body the body to use for the response
-     * @param headers the headers to use for the response
+     *
+     * @param ex         the exception to handle
+     * @param body       the body to use for the response
+     * @param headers    the headers to use for the response
      * @param statusCode the status code to use for the response
-     * @param request the current request
+     * @param request    the current request
      * @return a {@code ResponseEntity} for the response to use, possibly
      * {@code null} when the response is already committed
      */
@@ -260,7 +232,52 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
 
     /**
+     * Create a new {@link ResponseEntity} object with the given parameters and dispatch events.
+     *
+     * @param ex         the exception to handle
+     * @param headers    the headers
+     * @param statusCode the status code
+     * @param request    the current request
+     * @param body       the body to use for the response
+     * @return a {@code ResponseEntity} for the response to use
+     */
+    private ResponseEntity<Object> createResponseEntity(@NotNull Exception ex, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request, ProblemDetail body) {
+        dispatchEvents(ex, body);
+        return createResponseEntity(body, headers, statusCode, request);
+    }
+
+    /**
+     * Update the default title and type of the {@link ProblemDetail} object.
+     *
+     * @param ex   the exception
+     * @param body the problem detail object
+     */
+    protected void updateDefaultTittleAndType(Exception ex, ProblemDetail body) {
+        var messageSource = getMessageSource();
+        var clazz = ex.getClass();
+        if (messageSource != null) {
+            var locale = LocaleContextHolder.getLocale();
+            body.setTitle(messageSource.getMessage(ErrorResponse.getDefaultTitleMessageCode(clazz), null, null, locale));
+            var type = messageSource.getMessage(ErrorResponse.getDefaultTypeMessageCode(clazz), null, null, locale);
+            if (type != null) body.setType(URI.create(type));
+        }
+    }
+
+    /**
+     * Dispatch events after handling an exception.
+     *
+     * @param ex   the exception
+     * @param body the body
+     */
+    private void dispatchEvents(Exception ex, Object body) {
+        if (logErrors) log.error("Error: {}", ex.getMessage(), ex);
+        if (sendStackTrace && body instanceof ProblemDetail problemDetail) problemDetail.setProperty("stackTrace", getStackTrace(ex));
+    }
+
+
+    /**
      * Get the stack trace of an exception as a string.
+     *
      * @param throwable the exception
      * @return the stack trace as a string
      */
