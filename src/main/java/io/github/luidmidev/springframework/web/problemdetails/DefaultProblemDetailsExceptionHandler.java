@@ -11,6 +11,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.SpringSecurityMessageSource;
 import org.springframework.web.ErrorResponse;
@@ -117,6 +118,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         return ResponseEntity.status(problem.getStatus()).headers(ex.getHeaders()).body(problem);
     }
 
+
     /**
      * Handler for {@link ConstraintViolationException} exceptions.
      *
@@ -130,18 +132,18 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         var body = super.createProblemDetail(ex, BAD_REQUEST, defaultDetail, null, null, request);
 
         addValidationErrors(body, ex.getConstraintViolations(), violation -> {
-            var path = violation.getPropertyPath().toString().split("\\.");
             log.debug("Property path: {}, Class bean {}", violation.getPropertyPath(), violation.getRootBeanClass());
-            return new FieldMessage(path[path.length - 1], violation.getMessage());
+            var path = violation.getPropertyPath().toString();
+            return new FieldMessage(path, violation.getMessage());
         });
 
         return createResponseEntity(ex, new HttpHeaders(), BAD_REQUEST, request, body);
     }
 
     /**
-     * Handler for authentication exceptions. The `createDefaultResponseEntity` method is not used because Spring Security is responsible for
-     * internationalizing the authentication error message. This message is used only for the 'detail' of the ProblemDetail,
-     * while the title and type are obtained from the MessageSource of this artifact.
+     * Handler for authentication exceptions. Spring Security is responsible for internationalizing the authentication error message.
+     * This message is used only for the 'detail' of the ProblemDetail, while the title and type are obtained from the MessageSource
+     * of this artifact.
      *
      * @param ex      AuthenticationException
      * @param request WebRequest
@@ -150,11 +152,24 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      */
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
-        var defaultDetail = ex.getMessage();
-        var body = ProblemDetail.forStatusAndDetail(UNAUTHORIZED, defaultDetail);
-        updateDefaultTittleAndType(ex, body);
-        return createResponseEntity(ex, new HttpHeaders(), UNAUTHORIZED, request, body);
+        return createDefaultResponseEntity(ex, new HttpHeaders(), UNAUTHORIZED, ex.getMessage(), null, null, request);
     }
+
+    /**
+     * Handler for authorization exceptions. Spring Security is responsible for internationalizing the authorization error message.
+     * This message is used only for the 'detail' of the ProblemDetail, while the title and type are obtained from the MessageSource
+     * of this artifact.
+     *
+     * @param ex      AccessDeniedException
+     * @param request WebRequest
+     * @return response entity with the problem detail.
+     * @see SpringSecurityMessageSource#getAccessor()
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAuthorizationDeniedException(AccessDeniedException ex, WebRequest request) {
+        return createDefaultResponseEntity(ex, new HttpHeaders(), FORBIDDEN, ex.getMessage(), null, null, request);
+    }
+
 
 
     /**
@@ -197,8 +212,6 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         if (!errorsMap.isEmpty()) body.setProperty("errors", errorsMap);
         if (!globalErrors.isEmpty()) body.setProperty("globalErrors", globalErrors);
     }
-
-
 
 
     /**
