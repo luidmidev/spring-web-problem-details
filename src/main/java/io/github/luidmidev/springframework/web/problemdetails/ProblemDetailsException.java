@@ -37,6 +37,7 @@ public class ProblemDetailsException extends RuntimeException {
      * @param headers the headers to be used in the response.
      */
     public ProblemDetailsException(ProblemDetail body, HttpHeaders headers) {
+        super(body.getTitle());
         this.body = body;
         this.headers = headers;
     }

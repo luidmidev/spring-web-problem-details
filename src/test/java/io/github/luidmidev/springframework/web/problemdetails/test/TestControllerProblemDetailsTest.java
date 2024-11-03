@@ -16,9 +16,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(
         properties = {
-                "spring.web.problemdetails.all-errors=true",
-                "spring.web.problemdetails.log-errors=true",
-                "spring.web.problemdetails.send-stack-trace=true"
+                "spring.web.problemdetails.all-errors=false",
+                "spring.web.problemdetails.log-errors=false",
+                "spring.web.problemdetails.send-stack-trace=false"
         }
 )
 @AutoConfigureMockMvc
@@ -33,6 +33,16 @@ class TestControllerProblemDetailsTest {
     void errorWithException() throws Exception {
 
         var result = mockMvc.perform(get("/bad-request"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        System.out.println(result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void errorWithRuntimeException() throws Exception {
+
+        var result = mockMvc.perform(get("/bad-request-runtime"))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 

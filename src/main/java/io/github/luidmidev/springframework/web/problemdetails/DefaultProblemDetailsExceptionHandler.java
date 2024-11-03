@@ -2,6 +2,7 @@ package io.github.luidmidev.springframework.web.problemdetails;
 
 import io.github.luidmidev.springframework.web.problemdetails.config.ProblemDetailsProperties;
 import io.github.luidmidev.springframework.web.problemdetails.config.ProblemDetailsPropertiesAware;
+import io.github.luidmidev.springframework.web.problemdetails.config.ResponseEntityExceptionHandlerResolverAware;
 import io.github.luidmidev.springframework.web.problemdetails.schemas.FieldMessage;
 import io.github.luidmidev.springframework.web.problemdetails.schemas.ValidationErrorCollector;
 import jakarta.validation.ConstraintViolationException;
@@ -33,11 +34,14 @@ import static org.springframework.http.HttpStatus.*;
  */
 @Log4j2
 @ControllerAdvice
-public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler implements ProblemDetailsPropertiesAware {
+public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler implements ProblemDetailsPropertiesAware, ResponseEntityExceptionHandlerResolverAware {
 
     private boolean allErrors;
     private boolean logErrors;
     private boolean sendStackTrace;
+
+
+    private ResponseEntityExceptionHandlerResolver resolver;
 
     /**
      * Processor method for the {@link ProblemDetailsProperties} configuration.
@@ -45,11 +49,17 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      * @param properties the configuration object.
      */
     @Override
-    public void setErrorsConfiguration(ProblemDetailsProperties properties) {
+    public void setProblemDetailsProperties(ProblemDetailsProperties properties) {
         log.info("Setting error properties: {}", properties);
         this.allErrors = properties.isAllErrors();
         this.logErrors = properties.isLogErrors();
         this.sendStackTrace = properties.isSendStackTrace();
+    }
+
+    @Override
+    public void setResponseEntityExceptionHandlerResolver(ResponseEntityExceptionHandlerResolver resolver) {
+        log.info("Setting response entity exception handler resolver: {}", resolver);
+        this.resolver = resolver;
     }
 
     /**
@@ -106,6 +116,25 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
                 : createDefaultResponseEntity(ex, new HttpHeaders(), INTERNAL_SERVER_ERROR, "Internal Server Error", "problemDetail.java.lang.Exception", null, request);
     }
 
+
+    /**
+     * Handler for {@link RuntimeException} exceptions.
+     * @param ex the exception
+     * @param request the web request
+     * @return response entity with the problem detail.
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex, WebRequest request) throws NoSuchMethodException {
+        if (RuntimeException.class.equals(ex.getClass())) {
+            var cause = ex.getCause();
+            if (cause != null) {
+                if (RuntimeException.class.equals(cause.getClass())) handleRuntimeException((RuntimeException) cause, request);
+                if (cause instanceof Exception exception) return resolver.handleException(exception, request);
+            }
+        }
+        return handleDefaultException(ex, request);
+    }
+
     /**
      * Handler for {@link ProblemDetailsException} exceptions.
      *
@@ -113,7 +142,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      * @return response entity with the problem detail.
      */
     @ExceptionHandler(ProblemDetailsException.class)
-    public ResponseEntity<ProblemDetail> handleApiErrorException(ProblemDetailsException ex) {
+    public ResponseEntity<Object> handleApiErrorException(ProblemDetailsException ex, WebRequest ignored) {
         var problem = ex.getBody();
         return ResponseEntity.status(problem.getStatus()).headers(ex.getHeaders()).body(problem);
     }
@@ -169,7 +198,6 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
     public ResponseEntity<Object> handleAuthorizationDeniedException(AccessDeniedException ex, WebRequest request) {
         return createDefaultResponseEntity(ex, new HttpHeaders(), FORBIDDEN, ex.getMessage(), null, null, request);
     }
-
 
 
     /**
@@ -300,4 +328,6 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         throwable.printStackTrace(new PrintWriter(sw, true));
         return sw.toString();
     }
+
+
 }

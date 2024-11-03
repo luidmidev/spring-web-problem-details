@@ -15,7 +15,7 @@ public class ProblemDetailsProperties {
      */
     private boolean allErrors = false;
     /**
-     * If true, all stack traces will logged to the console
+     * If true, all stack traces will log to the console
      */
     private boolean logErrors = false;
 

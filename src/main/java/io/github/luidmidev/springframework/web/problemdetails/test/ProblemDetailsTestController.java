@@ -25,6 +25,15 @@ public class ProblemDetailsTestController {
     }
 
     /**
+     * Endpoint that throws an exception with a bad request status
+     * @return response entity
+     */
+    @GetMapping("bad-request-runtime")
+    public ResponseEntity<String> errorWithRuntimeException() {
+        throw new RuntimeException(ApiError.badRequest("Excepión de ejecución de prueba"));
+    }
+
+    /**
      * Endpoint that throws an exception with a bad request status and an extension
      * @return response entity
      */
