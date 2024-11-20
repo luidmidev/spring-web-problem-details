@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,30 +37,28 @@ public class ResponseEntityExceptionHandlerResolver {
         controllerAdviceBeansMap.putAll(restControllerAdviceBeansMap);
         controllerAdviceBeansMap.forEach((key, value) -> log.debug("Found controller advice bean: {}", key));
 
-        for (var bean : controllerAdviceBeansMap.entrySet()) {
-            var beanClass = bean.getValue().getClass();
+        controllerAdviceBeansMap.forEach((beanName, bean) -> {
+            var beanClass = bean.getClass();
+            // Verificar que el metodo acepte exactamente dos parámetros:
+            // 1. Un tipo de Exception
+            // 2. WebRequest
+            // Y que el tipo de retorno sea ResponseEntity<Object>
+            Arrays.stream(beanClass.getDeclaredMethods())
+                    .filter(method -> !Modifier.isStatic(method.getModifiers()) && method.canAccess(bean) && method.isAnnotationPresent(ExceptionHandler.class))
+                    .forEach(method -> {
+                        var exceptionTypes = method.getParameterTypes();
+                        if (exceptionTypes.length == 2
+                                && Exception.class.isAssignableFrom(exceptionTypes[0])
+                                && WebRequest.class.isAssignableFrom(exceptionTypes[1])
+                                && isResponseEntityOfTypeObject(method)) {
 
-            for (var method : beanClass.getDeclaredMethods()) {
-                if (method.isAnnotationPresent(ExceptionHandler.class)) {
-                    var exceptionTypes = method.getParameterTypes();
-
-                    // Verificar que el metodo acepte exactamente dos parámetros:
-                    // 1. Un tipo de Exception
-                    // 2. WebRequest
-                    // Y que el tipo de retorno sea ResponseEntity<Object>
-                    if (exceptionTypes.length == 2
-                            && Exception.class.isAssignableFrom(exceptionTypes[0])
-                            && WebRequest.class.isAssignableFrom(exceptionTypes[1])
-                            && isResponseEntityOfTypeObject(method)) {
-
-                        log.debug("Found exception handler method: {} in bean: {}", method.getName(), bean.getKey());
-                        var exceptionClass = (Class<? extends Exception>) exceptionTypes[0];
-                        exceptionHandlerMethods.put(exceptionClass, method);
-                        controllerAdviceBeans.put(beanClass, bean.getValue());
-                    }
-                }
-            }
-        }
+                            log.debug("Found exception handler method: {} in bean: {}", method.getName(), beanName);
+                            var exceptionClass = (Class<? extends Exception>) exceptionTypes[0];
+                            exceptionHandlerMethods.put(exceptionClass, method);
+                            controllerAdviceBeans.put(beanClass, bean);
+                        }
+                    });
+        });
     }
 
     private static boolean isResponseEntityOfTypeObject(Method method) {
@@ -79,11 +79,10 @@ public class ResponseEntityExceptionHandlerResolver {
         }
 
         try {
-            handlerMethod.setAccessible(true);
             var controllerAdviceBean = controllerAdviceBeans.get(handlerMethod.getDeclaringClass());
             return (ResponseEntity<Object>) handlerMethod.invoke(controllerAdviceBean, exception, webRequest);
         } catch (Exception e) {
-            throw new RuntimeException("Error invoking exception handler method", e);
+            throw new IllegalStateException("Error invoking exception handler method", e);
         }
 
     }

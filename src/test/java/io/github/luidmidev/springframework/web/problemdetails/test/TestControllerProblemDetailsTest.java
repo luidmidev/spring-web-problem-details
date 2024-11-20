@@ -6,11 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockPart;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -24,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class TestControllerProblemDetailsTest {
-
 
     @Autowired
     private MockMvc mockMvc;
@@ -62,7 +64,7 @@ class TestControllerProblemDetailsTest {
     @Test
     void endpointWithParam() throws Exception {
 
-        var result = mockMvc.perform(get("/endpoint-with-param").param("param", "test"))
+        var result = mockMvc.perform(get("/endpoint-with-param").param("param", "io/github/luidmidev/springframework/web/problemdetails/test"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -81,5 +83,29 @@ class TestControllerProblemDetailsTest {
                 .andReturn();
 
         System.out.println("Response: " + result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void requestParts() throws Exception {
+
+        var part1 = new MockPart("part1", null, "Parte 1".getBytes());
+        var part2 = new MockPart("part2", null, "[\"item1\", \"item2\"]".getBytes());
+        part2.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        var part3 = new MockMultipartFile(
+                "part3",
+                "test-file.txt",
+                MediaType.TEXT_PLAIN_VALUE,
+                "Contenido del archivo".getBytes()
+        );
+
+        var result = mockMvc.perform(
+                        multipart("/request-parts")
+                                .part(part1, part2)
+                                .file(part3))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        System.out.println(result.getResponse().getContentAsString());
+
     }
 }

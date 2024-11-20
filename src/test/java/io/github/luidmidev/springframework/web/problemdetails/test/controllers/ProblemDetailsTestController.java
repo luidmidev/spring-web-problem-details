@@ -1,12 +1,13 @@
-package io.github.luidmidev.springframework.web.problemdetails.test;
+package io.github.luidmidev.springframework.web.problemdetails.test.controllers;
 
 import io.github.luidmidev.springframework.web.problemdetails.ApiError;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * Test controller
@@ -59,4 +60,16 @@ public class ProblemDetailsTestController {
     public ResponseEntity<String> endpointWithParam(@RequestParam String param) {
         return ResponseEntity.ok("Param: " + param);
     }
+
+
+    @PostMapping("request-parts")
+    public ResponseEntity<String> requestParts(
+            @RequestPart("part1") String part1,
+            @RequestPart("part2") List<String> part2,
+            @RequestPart("part3") MultipartFile part3
+    ) {
+        return ResponseEntity.ok("Part1: " + part1 + ", Part2: " + part2 + ", Part3: " + part3.getOriginalFilename());
+
+    }
+
 }

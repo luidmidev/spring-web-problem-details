@@ -25,6 +25,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.Collection;
+import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
 import static org.springframework.http.HttpStatus.*;
@@ -111,9 +112,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleDefaultException(Exception ex, WebRequest request) {
-        return allErrors
-                ? createDefaultResponseEntity(ex, new HttpHeaders(), INTERNAL_SERVER_ERROR, ex.getMessage(), "problemDetail.java.lang.Exception.message", new Object[]{ex.getMessage()}, request)
-                : createDefaultResponseEntity(ex, new HttpHeaders(), INTERNAL_SERVER_ERROR, "Internal Server Error", "problemDetail.java.lang.Exception", null, request);
+        return allErrors ? createDefaultResponseEntity(ex, new HttpHeaders(), INTERNAL_SERVER_ERROR, ex.getMessage(), "problemDetail.java.lang.Exception.message", new Object[]{ex.getMessage()}, request) : createDefaultResponseEntity(ex, new HttpHeaders(), INTERNAL_SERVER_ERROR, "Internal Server Error", "problemDetail.java.lang.Exception", null, request);
     }
 
 
@@ -129,6 +128,19 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
             var cause = ex.getCause();
             if (cause != null) {
                 if (RuntimeException.class.equals(cause.getClass())) handleRuntimeException((RuntimeException) cause, request);
+                if (cause instanceof Exception exception) return resolver.handleException(exception, request);
+            }
+        }
+        return handleDefaultException(ex, request);
+    }
+
+
+    @ExceptionHandler(CompletionException.class)
+    public ResponseEntity<Object> handleCompletionException(CompletionException ex, WebRequest request) throws NoSuchMethodException {
+        if (CompletionException.class.equals(ex.getClass())) {
+            var cause = ex.getCause();
+            if (cause != null) {
+                if (CompletionException.class.equals(cause.getClass())) handleCompletionException((CompletionException) cause, request);
                 if (cause instanceof Exception exception) return resolver.handleException(exception, request);
             }
         }
