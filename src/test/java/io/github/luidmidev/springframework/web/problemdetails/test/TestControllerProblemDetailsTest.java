@@ -17,13 +17,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@SpringBootTest(
-        properties = {
-                "spring.web.problemdetails.all-errors=false",
-                "spring.web.problemdetails.log-errors=false",
-                "spring.web.problemdetails.send-stack-trace=false"
-        }
-)
+@SpringBootTest(properties = {
+        "spring.web.problemdetails.all-errors=false",
+        "spring.web.problemdetails.log-errors=true",
+        "spring.web.problemdetails.send-stack-trace=true"
+})
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class TestControllerProblemDetailsTest {

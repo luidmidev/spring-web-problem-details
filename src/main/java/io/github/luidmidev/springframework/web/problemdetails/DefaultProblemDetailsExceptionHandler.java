@@ -6,6 +6,8 @@ import io.github.luidmidev.springframework.web.problemdetails.config.ResponseEnt
 import io.github.luidmidev.springframework.web.problemdetails.schemas.FieldMessage;
 import io.github.luidmidev.springframework.web.problemdetails.schemas.ValidationErrorCollector;
 import jakarta.validation.ConstraintViolationException;
+import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.MessageSource;
@@ -25,7 +27,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.Collection;
-import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
 import static org.springframework.http.HttpStatus.*;
@@ -35,13 +36,12 @@ import static org.springframework.http.HttpStatus.*;
  */
 @Log4j2
 @ControllerAdvice
+@Getter(AccessLevel.PROTECTED)
 public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler implements ProblemDetailsPropertiesAware, ResponseEntityExceptionHandlerResolverAware {
 
     private boolean allErrors;
     private boolean logErrors;
     private boolean sendStackTrace;
-
-
     private ResponseEntityExceptionHandlerResolver resolver;
 
     /**
@@ -61,33 +61,6 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
     public void setResponseEntityExceptionHandlerResolver(ResponseEntityExceptionHandlerResolver resolver) {
         log.info("Setting response entity exception handler resolver: {}", resolver);
         this.resolver = resolver;
-    }
-
-    /**
-     * Check if the {@link ProblemDetailsProperties} allErrors value
-     *
-     * @return value
-     */
-    protected boolean isAllErrors() {
-        return allErrors;
-    }
-
-    /**
-     * Check if the {@link ProblemDetailsProperties} logErrors value
-     *
-     * @return value
-     */
-    protected boolean isLogErrors() {
-        return logErrors;
-    }
-
-    /**
-     * Check if the {@link ProblemDetailsProperties} sendStackTrace value
-     *
-     * @return value
-     */
-    protected boolean isSendStackTrace() {
-        return sendStackTrace;
     }
 
     /**
@@ -134,19 +107,6 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         return handleDefaultException(ex, request);
     }
 
-
-    @ExceptionHandler(CompletionException.class)
-    public ResponseEntity<Object> handleCompletionException(CompletionException ex, WebRequest request) throws NoSuchMethodException {
-        if (CompletionException.class.equals(ex.getClass())) {
-            var cause = ex.getCause();
-            if (cause != null) {
-                if (CompletionException.class.equals(cause.getClass())) handleCompletionException((CompletionException) cause, request);
-                if (cause instanceof Exception exception) return resolver.handleException(exception, request);
-            }
-        }
-        return handleDefaultException(ex, request);
-    }
-
     /**
      * Handler for {@link ProblemDetailsException} exceptions.
      *
@@ -156,6 +116,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
     @ExceptionHandler(ProblemDetailsException.class)
     public ResponseEntity<Object> handleApiErrorException(ProblemDetailsException ex, WebRequest ignored) {
         var problem = ex.getBody();
+        dispatchEvents(ex, problem);
         return ResponseEntity.status(problem.getStatus()).headers(ex.getHeaders()).body(problem);
     }
 
