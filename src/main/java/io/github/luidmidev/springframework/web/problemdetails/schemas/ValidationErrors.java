@@ -40,6 +40,12 @@ public class ValidationErrorCollector {
         globalErrors.add(message);
     }
 
+    public void throwIfHasErrors() {
+        if (!errors.isEmpty() || !globalErrors.isEmpty()) {
+            throw new ValidationException(this);
+        }
+    }
+
     /**
      * Model used to represent a validation error for a specific field.
      */
