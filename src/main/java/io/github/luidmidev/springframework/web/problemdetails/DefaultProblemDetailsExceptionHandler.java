@@ -255,7 +255,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      * @param body       the body to use for the response
      * @return a {@code ResponseEntity} for the response to use
      */
-    private ResponseEntity<Object> createResponseEntity(@NotNull Exception ex, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request, ProblemDetail body) {
+    protected final ResponseEntity<Object> createResponseEntity(@NotNull Exception ex, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request, ProblemDetail body) {
         dispatchEvents(ex, body);
         return createResponseEntity(body, headers, statusCode, request);
     }
