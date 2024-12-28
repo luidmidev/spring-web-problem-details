@@ -4,7 +4,7 @@ import io.github.luidmidev.springframework.web.problemdetails.config.ProblemDeta
 import io.github.luidmidev.springframework.web.problemdetails.config.ProblemDetailsPropertiesAware;
 import io.github.luidmidev.springframework.web.problemdetails.config.ResponseEntityExceptionHandlerResolverAware;
 import io.github.luidmidev.springframework.web.problemdetails.schemas.FieldMessage;
-import io.github.luidmidev.springframework.web.problemdetails.schemas.ValidationErrorCollector;
+import io.github.luidmidev.springframework.web.problemdetails.schemas.ValidationErrors;
 import jakarta.validation.ConstraintViolationException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -142,6 +142,15 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         return createResponseEntity(ex, new HttpHeaders(), BAD_REQUEST, request, body);
     }
 
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Object> handleValidationException(ValidationException ex, WebRequest request) {
+        var statusCode = BAD_GATEWAY;
+        var body = createProblemDetail(ex, statusCode, ex.getMessage(), null, null, request);
+        var validationErrors = ex.getValidationErrors();
+        addErrorsOnProblemDetail(validationErrors, body);
+        return createResponseEntity(ex, new HttpHeaders(), statusCode, request, body);
+    }
+
     /**
      * Handler for authentication exceptions. Spring Security is responsible for internationalizing the authentication error message.
      * This message is used only for the 'detail' of the ProblemDetail, while the title and type are obtained from the MessageSource
@@ -200,17 +209,19 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      * @param <T>    the type of the error
      */
     protected static <T> void addValidationErrors(ProblemDetail body, Collection<T> errors, Function<T, FieldMessage> mapper) {
-        var validations = new ValidationErrorCollector();
+        var validationErrors = new ValidationErrors();
         for (var error : errors) {
             var fieldError = mapper.apply(error);
-            if (fieldError.field() != null) validations.addError(fieldError.field(), fieldError.message());
-            else validations.addGlobalError(fieldError.message());
+            if (fieldError.field() != null) validationErrors.addError(fieldError.field(), fieldError.message());
+            else validationErrors.addGlobalError(fieldError.message());
         }
+        addErrorsOnProblemDetail(validationErrors, body);
+    }
 
-        var errorsMap = validations.getErrors();
-        var globalErrors = validations.getGlobalErrors();
-
-        if (!errorsMap.isEmpty()) body.setProperty("errors", errorsMap);
+    private static void addErrorsOnProblemDetail(ValidationErrors validationErrors, ProblemDetail body) {
+        var errors = validationErrors.getErrors();
+        var globalErrors = validationErrors.getGlobalErrors();
+        if (!errors.isEmpty()) body.setProperty("errors", errors);
         if (!globalErrors.isEmpty()) body.setProperty("globalErrors", globalErrors);
     }
 

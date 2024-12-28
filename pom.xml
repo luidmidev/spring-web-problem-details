@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.luidmidev</groupId>
     <artifactId>spring-web-problem-details</artifactId>
-    <version>0.0.7</version>
+    <version>0.0.8</version>
     <name>Spring Web Problem Details</name>
 
     <description>
