@@ -100,8 +100,12 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         if (RuntimeException.class.equals(ex.getClass())) {
             var cause = ex.getCause();
             if (cause != null) {
-                if (RuntimeException.class.equals(cause.getClass())) handleRuntimeException((RuntimeException) cause, request);
-                if (cause instanceof Exception exception) return resolver.handleException(exception, request);
+                if (RuntimeException.class.equals(cause.getClass())) {
+                    return handleRuntimeException((RuntimeException) cause, request);
+                }
+                if (cause instanceof Exception exception) {
+                    return resolver.handleException(exception, request);
+                }
             }
         }
         return handleDefaultException(ex, request);
@@ -296,7 +300,8 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      */
     private void dispatchEvents(Exception ex, Object body) {
         if (logErrors) log.error("Error: {}", ex.getMessage(), ex);
-        if (sendStackTrace && body instanceof ProblemDetail problemDetail) problemDetail.setProperty("stackTrace", getStackTrace(ex));
+        if (sendStackTrace && body instanceof ProblemDetail problemDetail)
+            problemDetail.setProperty("stackTrace", getStackTrace(ex));
     }
 
 
