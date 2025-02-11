@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -22,7 +22,7 @@ public class ValidationErrors {
      * @param field The field name
      * @param message The error message
      */
-    public void addError(String field, String message) {
+    public void add(String field, String message) {
         var error = errors.stream()
                 .filter(err -> err.getField().equals(field))
                 .findFirst()
@@ -31,17 +31,39 @@ public class ValidationErrors {
     }
 
     /**
+     * Adds a new error for the given field and throws a {@link ValidationException}.
+     * @param field The field name
+     * @param message The error message
+     */
+    public void addThrow(String field, String message) {
+        add(field, message);
+        throwThis();
+    }
+
+    /**
      * Adds a new global error.
      * @param message The error message
      */
-    public void addGlobalError(String message) {
+    public void addGlobal(String message) {
         globalErrors.add(message);
     }
 
+    /**
+     * Adds a new error for the given field.
+     * @return The error
+     */
+    public boolean hasErrors() {
+        return !errors.isEmpty() || !globalErrors.isEmpty();
+    }
+
     public void throwIfHasErrors() {
-        if (!errors.isEmpty() || !globalErrors.isEmpty()) {
-            throw new ValidationException(this);
+        if (hasErrors()) {
+            throwThis();
         }
+    }
+
+    private void throwThis() {
+        throw new ValidationException(this);
     }
 
     /**
@@ -51,11 +73,15 @@ public class ValidationErrors {
     @RequiredArgsConstructor
     public static class Error {
         private final String field;
-        private List<String> messages = new ArrayList<>();
+        private List<String> messages;
 
-        private Error(String field, String... messages) {
+        private Error(String field, List<String> messages) {
             this.field = field;
-            this.messages.addAll(Arrays.asList(messages));
+            this.messages = messages;
+        }
+
+        private Error(String field, String message) {
+            this(field, new ArrayList<>(Collections.singletonList(message)));
         }
     }
 }

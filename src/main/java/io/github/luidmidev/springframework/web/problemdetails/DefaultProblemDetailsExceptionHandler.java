@@ -217,8 +217,8 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
         var validationErrors = new ValidationErrors();
         for (var error : errors) {
             var fieldError = mapper.apply(error);
-            if (fieldError.field() != null) validationErrors.addError(fieldError.field(), fieldError.message());
-            else validationErrors.addGlobalError(fieldError.message());
+            if (fieldError.field() != null) validationErrors.add(fieldError.field(), fieldError.message());
+            else validationErrors.addGlobal(fieldError.message());
         }
         addErrorsOnProblemDetail(validationErrors, body);
     }
