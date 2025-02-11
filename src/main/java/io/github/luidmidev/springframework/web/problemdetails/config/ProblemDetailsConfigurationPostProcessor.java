@@ -3,6 +3,7 @@ package io.github.luidmidev.springframework.web.problemdetails.config;
 import io.github.luidmidev.springframework.web.problemdetails.ResponseEntityExceptionHandlerResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 
@@ -10,7 +11,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 /**
  * Bean post processor to inject the {@link ProblemDetailsProperties} configuration into beans that implement {@link ProblemDetailsPropertiesAware}.
  */
-@Log4j2
+@Slf4j
 @RequiredArgsConstructor
 public class ProblemDetailsConfigurationPostProcessor implements BeanPostProcessor {
 

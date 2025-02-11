@@ -1,6 +1,6 @@
 package io.github.luidmidev.springframework.web.problemdetails.test.controllers;
 
-import io.github.luidmidev.springframework.web.problemdetails.ApiError;
+import io.github.luidmidev.springframework.web.problemdetails.ProblemDetails;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +22,7 @@ public class ProblemDetailsTestController {
      */
     @GetMapping("bad-request")
     public ResponseEntity<String> errorWithException() {
-        throw ApiError.badRequest("Excepión de prueba");
+        throw ProblemDetails.badRequest("Excepión de prueba");
     }
 
     /**
@@ -31,7 +31,7 @@ public class ProblemDetailsTestController {
      */
     @GetMapping("bad-request-runtime")
     public ResponseEntity<String> errorWithRuntimeException() {
-        throw new RuntimeException(ApiError.badRequest("Excepión de ejecución de prueba"));
+        throw new RuntimeException(ProblemDetails.badRequest("Excepión de ejecución de prueba"));
     }
 
     /**
@@ -40,7 +40,7 @@ public class ProblemDetailsTestController {
      */
     @GetMapping("bad-request-by-extension")
     public ResponseEntity<String> errorWithExceptionByExtension() {
-        throw ApiError
+        throw ProblemDetails
                 .status(HttpStatus.BAD_REQUEST)
                 .title("This is a test exception")
                 .type("https://example.com/errors/test-exception")

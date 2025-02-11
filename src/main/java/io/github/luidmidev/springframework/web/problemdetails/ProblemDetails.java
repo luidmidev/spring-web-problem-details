@@ -22,7 +22,7 @@ import static org.springframework.http.HttpStatus.BAD_GATEWAY;
  */
 @SuppressWarnings("unused")
 @Getter
-public class ApiError {
+public class ProblemDetails {
 
     private final HttpStatusCode status;
     private final HttpHeaders headers = new HttpHeaders();
@@ -32,35 +32,35 @@ public class ApiError {
     private Map<String, Object> extensions = new LinkedHashMap<>();
 
     /**
-     * Create a new instance of {@link ApiError} with {@link HttpStatus#BAD_REQUEST} status
+     * Create a new instance of {@link ProblemDetails} with {@link HttpStatus#BAD_REQUEST} status
      */
-    public ApiError() {
+    public ProblemDetails() {
         this(HttpStatus.BAD_REQUEST);
     }
 
     /**
-     * Create a new instance of {@link ApiError} with the specified status
+     * Create a new instance of {@link ProblemDetails} with the specified status
      * @param status the HTTP status code
      */
-    public ApiError(HttpStatusCode status) {
+    public ProblemDetails(HttpStatusCode status) {
         this.status = status;
     }
 
     /**
-     * Create a new instance of {@link ApiError} with the specified status
+     * Create a new instance of {@link ProblemDetails} with the specified status
      * @param httpStatusCode the HTTP status code
-     * @return a new instance of {@link ApiError}
+     * @return a new instance of {@link ProblemDetails}
      */
-    public static ApiError status(@NotNull HttpStatusCode httpStatusCode) {
-        return new ApiError(httpStatusCode);
+    public static ProblemDetails status(@NotNull HttpStatusCode httpStatusCode) {
+        return new ProblemDetails(httpStatusCode);
     }
 
     /**
-     * Create a new instance of {@link ApiError} with the specified status
+     * Create a new instance of {@link ProblemDetails} with the specified status
      * @param httpStatusCode the HTTP status code
-     * @return a new instance of {@link ApiError}
+     * @return a new instance of {@link ProblemDetails}
      */
-    public static ApiError status(int httpStatusCode) {
+    public static ProblemDetails status(int httpStatusCode) {
         return status(HttpStatusCode.valueOf(httpStatusCode));
     }
 
@@ -69,7 +69,7 @@ public class ApiError {
      * @param title the title of the error
      * @return the current instance
      */
-    public ApiError title(String title) {
+    public ProblemDetails title(String title) {
         this.title = title;
         return this;
     }
@@ -79,7 +79,7 @@ public class ApiError {
      * @param type the type of the error
      * @return the current instance
      */
-    public ApiError type(URI type) {
+    public ProblemDetails type(URI type) {
         this.type = type;
         return this;
     }
@@ -89,7 +89,7 @@ public class ApiError {
      * @param type the type of the error
      * @return the current instance
      */
-    public ApiError type(String type) {
+    public ProblemDetails type(String type) {
         return type(URI.create(type));
     }
 
@@ -98,7 +98,7 @@ public class ApiError {
      * @param instance the instance of the error
      * @return the current instance
      */
-    public ApiError instance(URI instance) {
+    public ProblemDetails instance(URI instance) {
         this.instance = instance;
         return this;
     }
@@ -108,7 +108,7 @@ public class ApiError {
      * @param instance the instance of the error
      * @return the current instance
      */
-    public ApiError instance(String instance) {
+    public ProblemDetails instance(String instance) {
         return instance(URI.create(instance));
     }
 
@@ -117,7 +117,7 @@ public class ApiError {
      * @param extensions the extensions attribute of the error
      * @return the current instance
      */
-    public ApiError extensions(Map<String, Object> extensions) {
+    public ProblemDetails extensions(Map<String, Object> extensions) {
         this.extensions = extensions;
         return this;
     }
@@ -128,7 +128,7 @@ public class ApiError {
      * @param value the value of the extension attribute
      * @return the current instance
      */
-    public ApiError extension(String key, Object value) {
+    public ProblemDetails extension(String key, Object value) {
         this.extensions.put(key, value);
         return this;
     }
@@ -139,7 +139,7 @@ public class ApiError {
      * @param headersValues the values of the header
      * @return the current instance
      */
-    public ApiError header(String headerName, String... headersValues) {
+    public ProblemDetails header(String headerName, String... headersValues) {
         this.headers.addAll(headerName, List.of(headersValues));
         return this;
     }
@@ -149,14 +149,14 @@ public class ApiError {
      * @param headers the headers to add
      * @return the current instance
      */
-    public ApiError headers(MultiValueMap<String, String> headers) {
+    public ProblemDetails headers(MultiValueMap<String, String> headers) {
         this.headers.addAll(headers);
         return this;
     }
 
 
     /**
-     * Create a new instance of {@link ProblemDetailsException} with the current state of the {@link ApiError}
+     * Create a new instance of {@link ProblemDetailsException} with the current state of the {@link ProblemDetails}
      * @param detail the detail of the error
      * @return a new instance of {@link ProblemDetailsException}
      */
@@ -166,7 +166,7 @@ public class ApiError {
     }
 
     /**
-     * Create a new {@link ProblemDetail} with the current state of the {@link ApiError}
+     * Create a new {@link ProblemDetail} with the current state of the {@link ProblemDetails}
      * @param detail the detail of the error
      * @return a new instance of {@link ProblemDetail}
      */

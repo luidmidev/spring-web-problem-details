@@ -51,7 +51,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      */
     @Override
     public void setProblemDetailsProperties(ProblemDetailsProperties properties) {
-        log.info("Setting error properties: {}", properties);
+        log.debug("Setting error properties: {}", properties);
         this.allErrors = properties.isAllErrors();
         this.logErrors = properties.isLogErrors();
         this.sendStackTrace = properties.isSendStackTrace();
@@ -59,7 +59,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     @Override
     public void setResponseEntityExceptionHandlerResolver(ResponseEntityExceptionHandlerResolver resolver) {
-        log.info("Setting response entity exception handler resolver: {}", resolver);
+        log.debug("Setting response entity exception handler resolver: {}", resolver);
         this.resolver = resolver;
     }
 
@@ -70,8 +70,8 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      */
     @Override
     public void setMessageSource(@NotNull MessageSource messageSource) {
-        log.info("Setting message source: {}", messageSource);
-        log.info("Message source class: {}", messageSource.getClass());
+        log.debug("Setting message source: {}", messageSource);
+        log.debug("Message source class: {}", messageSource.getClass());
         super.setMessageSource(messageSource);
     }
 
@@ -139,6 +139,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
         addValidationErrors(body, ex.getConstraintViolations(), violation -> {
             log.debug("Property path: {}, Class bean {}", violation.getPropertyPath(), violation.getRootBeanClass());
+            violation.getPropertyPath();
             var path = violation.getPropertyPath().toString();
             return new FieldMessage(path, violation.getMessage());
         });
@@ -148,7 +149,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
 
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<Object> handleValidationException(ValidationException ex, WebRequest request) {
-        var statusCode = BAD_GATEWAY;
+        var statusCode = BAD_REQUEST;
         var body = createProblemDetail(ex, statusCode, ex.getMessage(), null, null, request);
         var validationErrors = ex.getValidationErrors();
         addErrorsOnProblemDetail(validationErrors, body);
