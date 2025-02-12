@@ -2,11 +2,8 @@ package io.github.luidmidev.springframework.web.problemdetails.schemas;
 
 import io.github.luidmidev.springframework.web.problemdetails.ValidationException;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Model used to represent validation errors.
@@ -14,8 +11,8 @@ import java.util.List;
 @Data
 public class ValidationErrors {
 
-    private final List<Error> errors = new ArrayList<>();
-    private final List<String> globalErrors = new ArrayList<>();
+    private final Set<Error> errors = new HashSet<>();
+    private final Set<String> globalErrors = new HashSet<>();
 
     /**
      * Adds a new error for the given field if it already exists, otherwise creates a new one.
@@ -24,10 +21,11 @@ public class ValidationErrors {
      */
     public void add(String field, String message) {
         var error = errors.stream()
-                .filter(err -> err.getField().equals(field))
+                .filter(err -> err.field().equals(field))
                 .findFirst()
                 .orElseGet(() -> new Error(field, message));
-        error.getMessages().add(message);
+        errors.add(error);
+        error.messages().add(message);
     }
 
     /**
@@ -69,19 +67,11 @@ public class ValidationErrors {
     /**
      * Model used to represent a validation error for a specific field.
      */
-    @Data
-    @RequiredArgsConstructor
-    public static class Error {
-        private final String field;
-        private List<String> messages;
-
-        private Error(String field, List<String> messages) {
-            this.field = field;
-            this.messages = messages;
-        }
+    public record Error(String field, Set<String> messages) {
 
         private Error(String field, String message) {
-            this(field, new ArrayList<>(Collections.singletonList(message)));
+            this(field, new HashSet<>(Collections.singletonList(message)));
         }
+
     }
 }

@@ -214,13 +214,16 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
      * @param <T>    the type of the error
      */
     protected static <T> void addValidationErrors(ProblemDetail body, Collection<T> errors, Function<T, FieldMessage> mapper) {
-        var validationErrors = new ValidationErrors();
+        var validations = new ValidationErrors();
         for (var error : errors) {
             var fieldError = mapper.apply(error);
-            if (fieldError.field() != null) validationErrors.add(fieldError.field(), fieldError.message());
-            else validationErrors.addGlobal(fieldError.message());
+            if (fieldError.field() != null) {
+                validations.add(fieldError.field(), fieldError.message());
+            } else {
+                validations.addGlobal(fieldError.message());
+            }
         }
-        addErrorsOnProblemDetail(validationErrors, body);
+        addErrorsOnProblemDetail(validations, body);
     }
 
     private static void addErrorsOnProblemDetail(ValidationErrors validationErrors, ProblemDetail body) {
