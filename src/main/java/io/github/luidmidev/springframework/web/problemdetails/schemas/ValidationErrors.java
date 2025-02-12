@@ -20,11 +20,16 @@ public class ValidationErrors {
      * @param message The error message
      */
     public void add(String field, String message) {
+
         var error = errors.stream()
                 .filter(err -> err.field().equals(field))
                 .findFirst()
-                .orElseGet(() -> new Error(field, message));
-        errors.add(error);
+                .orElseGet(() -> {
+                    var newError = new Error(field);
+                    errors.add(newError);
+                    return newError;
+                });
+
         error.messages().add(message);
     }
 
@@ -69,8 +74,8 @@ public class ValidationErrors {
      */
     public record Error(String field, Set<String> messages) {
 
-        private Error(String field, String message) {
-            this(field, new HashSet<>(Collections.singletonList(message)));
+        private Error(String field) {
+            this(field, new HashSet<>());
         }
 
     }
