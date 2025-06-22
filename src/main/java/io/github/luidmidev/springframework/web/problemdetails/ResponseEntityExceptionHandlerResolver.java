@@ -1,7 +1,7 @@
 package io.github.luidmidev.springframework.web.problemdetails;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Log4j2
+@Slf4j
 @RequiredArgsConstructor
 public class ResponseEntityExceptionHandlerResolver {
 

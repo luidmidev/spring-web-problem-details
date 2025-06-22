@@ -2,7 +2,6 @@ package io.github.luidmidev.springframework.web.problemdetails.config;
 
 import io.github.luidmidev.springframework.web.problemdetails.ResponseEntityExceptionHandlerResolver;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -26,15 +25,15 @@ public class ProblemDetailsConfigurationPostProcessor implements BeanPostProcess
      */
     @Override
     public Object postProcessAfterInitialization(@NotNull Object bean, @NotNull String beanName) {
-        log.debug("Processing bean {} of type {}", beanName, bean.getClass().getName());
+        log.trace("Processing bean {} of type {}", beanName, bean.getClass().getName());
 
         if (bean instanceof ProblemDetailsPropertiesAware aware) {
-            log.debug("Injecting ProblemDetailsProperties into bean {}", beanName);
+            log.trace("Injecting ProblemDetailsProperties into bean {}", beanName);
             aware.setProblemDetailsProperties(properties);
         }
 
         if (bean instanceof ResponseEntityExceptionHandlerResolverAware aware) {
-            log.debug("Injecting ResponseEntityExceptionHandlerResolver into bean {}", beanName);
+            log.trace("Injecting ResponseEntityExceptionHandlerResolver into bean {}", beanName);
             aware.setResponseEntityExceptionHandlerResolver(resolver);
         }
 

@@ -12,4 +12,9 @@ public class ValidationException extends RuntimeException {
         super("Validation error");
         this.validationErrors = validationErrors;
     }
+
+    public ValidationException(ValidationErrors validationErrors, String message) {
+        super(message);
+        this.validationErrors = validationErrors;
+    }
 }
