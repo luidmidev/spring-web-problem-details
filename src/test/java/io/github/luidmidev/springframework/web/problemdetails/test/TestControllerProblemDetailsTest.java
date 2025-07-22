@@ -19,7 +19,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = {
         "spring.web.problemdetails.all-errors=false",
-        "spring.web.problemdetails.log-errors=true",
         "spring.web.problemdetails.send-stack-trace=true"
 })
 @AutoConfigureMockMvc

@@ -35,7 +35,9 @@ public class ResponseEntityExceptionHandlerResolver {
         var restControllerAdviceBeansMap = applicationContext.getBeansWithAnnotation(RestControllerAdvice.class);
 
         controllerAdviceBeansMap.putAll(restControllerAdviceBeansMap);
-        controllerAdviceBeansMap.forEach((key, value) -> log.debug("Found controller advice bean: {}", key));
+        if (log.isDebugEnabled()) {
+            controllerAdviceBeansMap.forEach((key, value) -> log.debug("Found controller advice bean: {}", key));
+        }
 
         controllerAdviceBeansMap.forEach((beanName, bean) -> {
             var beanClass = bean.getClass();

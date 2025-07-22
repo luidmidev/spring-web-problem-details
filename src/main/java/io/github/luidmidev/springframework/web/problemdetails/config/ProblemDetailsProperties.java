@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Role;
 
 /**
  * Configuration properties for the errors module.
+ *
  * @see ProblemDetailsPropertiesAware
  */
 @Data
@@ -17,10 +18,6 @@ public class ProblemDetailsProperties {
      * If true, all exceptions will be treated as errors, include supper class of {@link Exception}
      */
     private boolean allErrors = false;
-    /**
-     * If true, all stack traces will log to the console
-     */
-    private boolean logErrors = false;
 
     /**
      * If true, all stack traces will be sent to the client

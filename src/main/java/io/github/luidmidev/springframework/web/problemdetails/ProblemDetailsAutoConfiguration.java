@@ -22,23 +22,21 @@ public class ProblemDetailsAutoConfiguration {
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
     public ResponseEntityExceptionHandlerResolver responseEntityExceptionHandlerResolver(ApplicationContext context) {
-        log.info("Creating ResponseEntityExceptionHandlerResolver");
+        log.debug("Creating ResponseEntityExceptionHandlerResolver");
         return new ResponseEntityExceptionHandlerResolver(context);
     }
 
     @Bean
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    public static ProblemDetailsConfigurationPostProcessor problemDetailsConfigurationPostProcessor(
-            ProblemDetailsProperties properties,
-            ResponseEntityExceptionHandlerResolver resolver) {
-        log.info("Creating ProblemDetailsConfigurationPostProcessor with properties {} and resolver {}", properties, resolver);
+    public static ProblemDetailsConfigurationPostProcessor problemDetailsConfigurationPostProcessor(ProblemDetailsProperties properties, ResponseEntityExceptionHandlerResolver resolver) {
+        log.debug("Creating ProblemDetailsConfigurationPostProcessor with properties {} and resolver {}", properties, resolver);
         return new ProblemDetailsConfigurationPostProcessor(properties, resolver);
     }
 
     @Bean
     @ConditionalOnMissingBean
     public DefaultProblemDetailsExceptionHandler defaultExceptionHandler() {
-        log.info("Creating default exception handler");
+        log.debug("Creating default exception handler");
         return new DefaultProblemDetailsExceptionHandler();
     }
 }
