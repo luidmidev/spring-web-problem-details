@@ -3,10 +3,10 @@ package io.github.luidmidev.springframework.web.problemdetails;
 import org.springframework.http.ProblemDetail;
 
 @FunctionalInterface
-public interface UncaughtProblemDetailsCallback {
+public interface UncaughtProblemDetailCallback {
     void call(Exception exception, ProblemDetail problemDetail);
 
-    static UncaughtProblemDetailsCallback none() {
+    static UncaughtProblemDetailCallback none() {
         return (exception, problemDetails) -> {
             // No operation
         };

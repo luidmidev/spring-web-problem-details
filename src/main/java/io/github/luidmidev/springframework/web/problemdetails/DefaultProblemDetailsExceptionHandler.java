@@ -9,6 +9,7 @@ import io.github.luidmidev.springframework.web.problemdetails.utils.ExceptionUti
 import jakarta.validation.ConstraintViolationException;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.MessageSource;
@@ -41,11 +42,9 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
     private boolean allErrors;
     private boolean sendStackTrace;
     private ResponseEntityExceptionHandlerResolver resolver;
-    private UncaughtProblemDetailsCallback uncaughtProblemDetailsCallback = UncaughtProblemDetailsCallback.none();
 
-    private void setUncaughtProblemDetailsCallback(UncaughtProblemDetailsCallback uncaughtProblemDetailsCallback) {
-        this.uncaughtProblemDetailsCallback = uncaughtProblemDetailsCallback;
-    }
+    @Setter
+    private UncaughtProblemDetailCallback uncaughtProblemDetailCallback = UncaughtProblemDetailCallback.none();
 
 
     /**
@@ -93,7 +92,7 @@ public class DefaultProblemDetailsExceptionHandler extends ResponseEntityExcepti
                 ? createProblemDetail(ex, statusCode, ex.getMessage(), "problemDetail.java.lang.Exception.message", new Object[]{ex.getMessage()}, request)
                 : createProblemDetail(ex, statusCode, "Internal Server Error", "problemDetail.java.lang.Exception", null, request);
 
-        uncaughtProblemDetailsCallback.call(ex, body);
+        uncaughtProblemDetailCallback.call(ex, body);
         return createResponseEntity(ex, new HttpHeaders(), statusCode, request, body);
     }
 
